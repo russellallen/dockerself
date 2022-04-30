@@ -1,0 +1,39 @@
+#!/bin/sh
+
+NAME=$(uuidgen)
+
+docker run -d \
+ --name $NAME  \
+ -e MODE="tcp" \
+ -e XPRA_HTML="yes" \
+ -e DISPLAY=:14 \
+ -e XPRA_PASSWORD=111 \
+ -p 10000:10000 \
+ --rm \
+ jare/x11-bridge >/dev/null 2>&1
+
+echo 
+echo 'Welcome to Self on Docker'
+echo
+echo 'The host system is mounted at /host'
+echo
+echo 'Open GUI on:  http://localhost:10000/index.html?encoding=rgb32&password=111'
+echo 
+echo
+
+sleep 5
+
+docker run    \
+  --net host  \
+  -it         \
+  --rm        \
+  --volume "$HOME:/host/$HOME" \
+  --workdir "/host/$PWD" \
+  -h "$HOSTNAME" \
+  --volumes-from $NAME \
+  -e DISPLAY=:14 \
+ russellallen/selfvm:alpha1 $@
+
+docker kill $NAME >/dev/null 2>&1
+
+
